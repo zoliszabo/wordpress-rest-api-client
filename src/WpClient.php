@@ -47,6 +47,18 @@ class WpClient
     private $endPoints = [];
 
     /**
+     * An array of namespaces that are searched for the requested endpoint.
+     * By default it contains the default namespace only.
+     * Additional namespaces can be added using the method addEndpointNamespace().
+     * Newly added namespaces are always prepended, thus will have priority over already existing namespaces.
+     * This also means that the default namespace has the lowest priority.
+     * @var array
+     */
+    private $endpointNamespaces = [
+        'Vnn\WpApiClient\Endpoint\\',
+    ];
+
+    /**
      * WpClient constructor.
      * @param ClientInterface $httpClient
      * @param string $wordpressUrl
@@ -81,10 +93,13 @@ class WpClient
     public function __call($endpoint, array $args)
     {
         if (!isset($this->endPoints[$endpoint])) {
-            $class = 'Vnn\WpApiClient\Endpoint\\' . ucfirst($endpoint);
-            if (class_exists($class)) {
-                $this->endPoints[$endpoint] = new $class($this);
-            } else {
+            foreach($this->endpointNamespaces as $namespace) {
+                $class = $namespace . ucfirst($endpoint);
+                if (class_exists($class)) {
+                    $this->endPoints[$endpoint] = new $class($this);
+                }
+            }
+            if (!isset($this->endPoints[$endpoint])) {
                 throw new RuntimeException('Endpoint "' . $endpoint . '" does not exist"');
             }
         }
@@ -107,5 +122,14 @@ class WpClient
         );
 
         return $this->httpClient->send($request);
+    }
+
+    /**
+     * Add a new endpoint namespace that is to be searched for endpoints.
+     * @param string $namespace
+     */
+    public function addEndpointNamespace($namespace)
+    {
+        array_unshift($this->endpointNamespaces, $namespace);
     }
 }
