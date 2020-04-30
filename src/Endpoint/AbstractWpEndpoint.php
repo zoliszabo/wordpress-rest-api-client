@@ -3,6 +3,7 @@
 namespace Vnn\WpApiClient\Endpoint;
 
 use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 use RuntimeException;
 use Vnn\WpApiClient\WpClient;
 
@@ -32,9 +33,10 @@ abstract class AbstractWpEndpoint
      * @param int $id
      * @param array $params - parameters that can be passed to GET
      *        e.g. for tags: https://developer.wordpress.org/rest-api/reference/tags/#arguments
+     * @param Response $response The whole response object.
      * @return array
      */
-    public function get($id = null, array $params = null)
+    public function get($id = null, array $params = null, Response &$response = null)
     {
         $uri = $this->getEndpoint();
         $uri .= (is_null($id)?'': '/' . $id);
